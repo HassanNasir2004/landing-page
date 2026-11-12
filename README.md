@@ -1,2 +1,2 @@
 # landing-page
-created a landing page using html and css
+created a landing page using html, css and javascript
