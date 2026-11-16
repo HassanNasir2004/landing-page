@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A Century of Water — 3D scroll gallery</title>
+<meta name="color-scheme" content="dark">
+<meta name="description" content="A quiet 3D walk across a pond: scroll through eleven procedurally painted studies into a room of lilies.">
+<meta name="theme-color" content="#071218">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#071218;--fg:#eef3ee;--dim:#9fb3b0;--accent:#e9a8c4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;font-size:18px}
+#scroll{height:1400vh}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.ui{position:fixed;inset:0;pointer-events:none}
+header{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:24px;right:24px;display:flex;justify-content:space-between;font:12px/1 system-ui,sans-serif;letter-spacing:.25em;text-transform:uppercase;color:var(--dim)}
+#year{font-variant-numeric:tabular-nums;color:var(--fg)}
+#intro{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:0 24px}
+#intro h1{font-weight:300;font-size:clamp(48px,11vw,150px);margin:0;letter-spacing:.02em;line-height:1}
+#intro h1 span{display:inline-block;opacity:0;transform:translateY(40px);filter:blur(10px);animation:rise 1.6s cubic-bezier(.2,.7,.2,1) forwards}
+#intro p{margin:22px 0 0;font:13px/1.6 system-ui,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);opacity:0;animation:fade 2s 1.4s forwards}
+.hint{margin-top:40px;width:1px;height:56px;background:linear-gradient(var(--fg),transparent);justify-self:center;animation:drip 2s 2s infinite;opacity:0}
+@keyframes rise{to{opacity:1;transform:none;filter:none}}
+@keyframes fade{to{opacity:1}}
+@keyframes drip{0%{opacity:0;transform:scaleY(0);transform-origin:top}50%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1);transform-origin:bottom}}
+#cap{position:absolute;left:24px;bottom:calc(32px + env(safe-area-inset-bottom,0px));max-width:min(420px,80vw);transition:opacity .8s,transform .8s}
+#cap.out{opacity:0;transform:translateY(14px)}
+#cap small{font:11px system-ui,sans-serif;letter-spacing:.3em;color:var(--accent);text-transform:uppercase}
+#cap h2{font-weight:400;font-size:clamp(26px,4vw,44px);margin:8px 0 6px}
+#cap p{margin:0;color:var(--dim);font-size:19px;line-height:1.5;font-style:italic}
+#bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.1)}
+#bar i{display:block;width:0;height:100%;background:var(--accent)}
+#end{position:absolute;inset:0;display:grid;place-content:center;text-align:center;opacity:0;padding:0 24px}
+#end h2{font-weight:400;font-size:clamp(34px,7vw,84px);margin:0}
+#end p{color:var(--dim);font-style:italic;margin-top:14px}
+#fallback{display:none;position:fixed;inset:0;place-content:center;text-align:center;padding:24px}
+#snd,#tilt,#pal,#auto,#rain,#copy,#tour,#map,#narr,#photo,#calm,#art,#menu,#todauto,#fs,#guidebtn,#hint{position:absolute;right:24px;bottom:calc(32px + env(safe-area-inset-bottom,0px));pointer-events:auto;background:rgba(255,255,255,.06);color:var(--fg);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:10px 16px;font:11px system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px);transition:background .3s}
+#snd:hover,#snd:focus-visible,#tilt:hover,#tilt:focus-visible,#pal:hover,#pal:focus-visible,#auto:hover,#auto:focus-visible,#rain:hover,#rain:focus-visible,#copy:hover,#copy:focus-visible,#tour:hover,#tour:focus-visible,#map:hover,#map:focus-visible,#narr:hover,#narr:focus-visible,#photo:hover,#photo:focus-visible,#calm:hover,#calm:focus-visible,#art:hover,#art:focus-visible,#menu:hover,#menu:focus-visible,#todauto:hover,#todauto:focus-visible,#fs:hover,#fs:focus-visible,#guidebtn:hover,#guidebtn:focus-visible,#hint:hover,#hint:focus-visible,#gclose:hover,#gclose:focus-visible{background:rgba(255,255,255,.18);outline:2px solid var(--accent);outline-offset:2px}
+#tilt{display:none;bottom:calc(80px + env(safe-area-inset-bottom,0px))}@media(pointer:coarse){#tilt{display:block}}
+#pal,#auto,#rain,#copy,#tour,#map{bottom:auto}#copy{top:calc(218px + env(safe-area-inset-top,0px))}#tour{top:calc(254px + env(safe-area-inset-top,0px))}#map{top:calc(290px + env(safe-area-inset-top,0px))}#pal{top:calc(48px + env(safe-area-inset-top,0px))}#auto{top:calc(92px + env(safe-area-inset-top,0px))}#rain{top:calc(136px + env(safe-area-inset-top,0px))}
+#dots{position:absolute;left:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:11px;pointer-events:auto}
+#dots button{width:10px;height:10px;border-radius:50%;border:1px solid var(--fg);background:transparent;padding:0;cursor:pointer;opacity:.5;transition:all .35s}
+#dots button:hover,#dots button:focus-visible{opacity:1;outline:2px solid var(--accent);outline-offset:3px}
+#dots button.on{background:var(--accent);border-color:var(--accent);opacity:1;transform:scale(1.5)}
+#intro p.keys{font-size:11px;letter-spacing:.2em;margin-top:18px}
+#spd,#tod{position:absolute;right:24px;top:calc(182px + env(safe-area-inset-top,0px));width:120px;pointer-events:auto;accent-color:var(--accent)}
+#toast{position:absolute;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%) translateY(-10px);opacity:0;transition:opacity .5s,transform .5s;font:12px system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);text-align:center;max-width:86vw;line-height:1.7}
+#toast.on{opacity:1;transform:translateX(-50%)}
+@media(max-width:640px){#cap{max-width:calc(100vw - 180px);left:44px}#dots{left:12px}#spd{width:96px}}
+@media(pointer:coarse){#snd,#tilt,#pal,#auto,#rain,#copy,#tour,#map,#narr,#photo,#calm,#art,#menu,#todauto,#fs,#guidebtn,#hint{padding:12px 16px}#dots button{width:14px;height:14px}#dots{gap:14px}}
+#tools{position:absolute;right:24px;top:calc(46px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:auto;max-height:calc(100% - 150px);overflow-y:auto;scrollbar-width:none}
+#tools>*{position:static!important;top:auto!important}#tools.hide>*:not(#menu){display:none}
+#guidebtn{right:auto;left:24px;top:calc(46px + env(safe-area-inset-top,0px));bottom:auto;pointer-events:auto}
+#guide{position:fixed;inset:0;display:none;background:rgba(3,8,12,.96);z-index:8;overflow-y:auto;overscroll-behavior:contain;padding:calc(24px + env(safe-area-inset-top,0px)) 20px 48px}
+#guide.on{display:block}
+.gw{max-width:680px;margin:0 auto;font-size:18px;line-height:1.55}
+.gw h2{font-weight:300;font-size:clamp(34px,6vw,54px);margin:20px 0 6px}
+.gw h3{font:12px system-ui,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin:30px 0 10px}
+.gw .lead{color:var(--dim);font-style:italic;margin:0}.gw ul{padding-left:20px;margin:0}.gw li{margin:6px 0}.gw b{font-weight:500}
+.gw .kv{display:grid;grid-template-columns:max-content 1fr;gap:8px 22px;font-size:16px}.gw .kv span:nth-child(odd){color:var(--accent);font:13px system-ui,sans-serif;padding-top:3px}
+#arrow{position:absolute;left:0;top:0;width:0;height:0;opacity:0;transition:opacity .35s;color:var(--accent);filter:drop-shadow(0 0 8px currentColor);pointer-events:none}
+#arrow.on{opacity:1}#arrow svg{position:absolute;left:-22px;top:-22px;width:44px;height:44px;animation:pulse 1.2s ease-in-out infinite}
+#arrow span{position:absolute;left:-60px;width:120px;top:26px;text-align:center;font:11px system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--fg)}
+@keyframes pulse{50%{opacity:.45}}
+.ui::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.38));pointer-events:none}
+#glang{float:left;background:rgba(255,255,255,.08);color:var(--fg);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:7px 12px;font:12px system-ui,sans-serif}#glang option,#wlang option{color:#000}
+#welcome{position:fixed;inset:0;z-index:10;display:none;place-content:center;justify-items:center;gap:16px;text-align:center;background:rgba(3,8,12,.9);padding:24px}
+#welcome.on{display:grid}#welcome h2{font-weight:300;font-size:clamp(38px,8vw,80px);margin:0}#welcome p{margin:0;color:var(--dim);font-style:italic;font-size:19px}
+#welcome .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+#welcome button,#welcome select{background:rgba(255,255,255,.08);color:var(--fg);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:12px 20px;font:12px system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+#welcome button.pri{background:var(--accent);color:#071218;border-color:var(--accent)}
+#welcome button:hover,#welcome button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#gclose{float:right;background:rgba(255,255,255,.08);color:var(--fg);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:8px 14px;font:11px system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+#shotv{position:fixed;inset:0;display:none;place-content:center;justify-items:center;gap:12px;background:rgba(3,8,12,.94);z-index:7;padding:16px;cursor:zoom-out}
+#shotv.on{display:grid;animation:fade .6s}#shotv img{max-width:92vw;max-height:78vh;border:8px solid #f4efe6;border-bottom-width:34px;box-shadow:0 30px 100px rgba(0,0,0,.6);transform:rotate(-1deg)}
+#shotv p{margin:0;color:var(--dim);font-style:italic;text-align:center}
+.calm *,.calm *::before,.calm *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+#mapv{position:fixed;inset:0;display:none;place-content:center;background:rgba(3,8,12,.92);z-index:6;padding:16px;color:var(--fg)}
+#mapv.on{display:grid}#mapv svg{max-width:1000px;justify-self:center;overflow:visible}
+#mapv g:hover rect,#mapv g:focus-visible rect,#mapv g:hover circle{stroke:var(--accent)}#mapv g:focus-visible{outline:none}
+#mapv p{text-align:center;color:var(--dim);font-style:italic;margin:18px 0 0}
+#lb p::after{content:attr(data-s);display:block;margin:10px auto 0;max-width:560px;font-size:16px;opacity:.75}
+#lb{position:fixed;inset:0;display:none;place-content:center;justify-items:center;gap:14px;background:rgba(3,8,12,.92);z-index:5;padding:24px;cursor:zoom-out;opacity:0;transition:opacity .5s}
+#lb.on{display:grid}#lb.show{opacity:1}
+#lb canvas{position:static;width:min(92vw,calc(70vh*1.333));height:auto;border:10px solid #c9a45c;box-shadow:0 30px 120px rgba(233,168,196,.25);transform:scale(.94);transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+#lb.show canvas{transform:none}
+#lb p{margin:0;font-style:italic;color:var(--dim);text-align:center}
+#loader{position:fixed;inset:0;z-index:9;display:grid;place-content:center;justify-items:center;gap:22px;background:var(--bg);font:12px system-ui,sans-serif;letter-spacing:.35em;text-transform:uppercase;color:var(--dim);transition:opacity 1.4s .2s,visibility 0s 1.6s}
+#loader.gone{opacity:0;visibility:hidden}
+#loader i{width:46px;height:46px;border:1px solid var(--accent);border-radius:50%;animation:rp 1.6s infinite}
+@keyframes rp{from{transform:scale(.2);opacity:1}to{transform:scale(1.6);opacity:0}}
+@media(prefers-reduced-motion:reduce){#intro h1 span,#intro p{animation-duration:.01s}.hint{display:none}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px">This experience needs JavaScript and WebGL.</p></noscript>
+<div id="scroll"></div>
+<div class="ui">
+  <header><span>Water · Light · Memory</span><span><span id="gold" title="Golden lilies found">✦ 0/7</span> &nbsp;·&nbsp; <span id="seen">0/11</span> &nbsp;·&nbsp; <span id="year">1926</span></span></header>
+  <div id="intro"><h1 aria-label="A Century of Water"></h1><p>Walk on the water &mdash; scroll</p><div class="hint"></div><p class="keys">← → jump · A autoplay · T tour · G map · N narrate · P photo · C calm · H guide · R rain · M sound · double-click for a lantern · find 7 golden lilies</p></div>
+  <div id="cap" class="out" aria-live="polite"><small></small><h2></h2><p></p></div>
+  <div id="bar"><i></i></div>
+  <button id="snd" type="button" aria-pressed="false">Sound off</button>
+  <button id="tilt" type="button">Tilt off</button>
+  <button id="auto" type="button" aria-pressed="false">Autoplay off</button>
+  <button id="rain" type="button" aria-pressed="false">Rain off</button>
+  <button id="copy" type="button">Copy link</button>
+  <button id="tour" type="button" aria-pressed="false">Tour off</button>
+  <button id="map" type="button">Map</button>
+  <button id="narr" type="button" aria-pressed="false">Narrate off</button>
+  <button id="photo" type="button">Photo</button>
+  <button id="calm" type="button" aria-pressed="false">Calm off</button>
+  <button id="art" type="button">Add your art</button>
+  <input id="file" type="file" accept="image/*" multiple hidden>
+  <input id="tod" type="range" min="0" max="100" value="0" aria-label="Time of day" title="Time of day (drag to take control)">
+  <button id="todauto" type="button">Time: auto</button>
+  <div id="toast" role="status"></div>
+  <div id="arrow" aria-hidden="true"><svg viewBox="0 0 44 44"><path d="M8 9 L38 22 L8 35 L16 22 Z" fill="currentColor"/></svg><span></span></div>
+  <button id="guidebtn" type="button">? Guide</button>
+  <button id="fs" type="button">Fullscreen</button>
+  <button id="hint" type="button">Hint</button>
+  <input id="spd" type="range" min="4" max="20" value="11" aria-label="Autoplay speed" title="Autoplay speed">
+  <div id="dots" aria-label="Jump to a painting"></div>
+  <button id="pal" type="button">Palette · Rose</button>
+  <div id="end"><h2>The Room of Lilies</h2><p>Stay a while. The water doesn’t hurry.</p></div>
+</div>
+<div id="loader"><i></i>Entering the water</div>
+<div id="lb" role="dialog" aria-label="Painting"><canvas width="640" height="480"></canvas><p></p></div>
+<div id="mapv" role="dialog" aria-label="Map of the walk"></div>
+<div id="welcome" role="dialog" aria-label="Welcome" aria-modal="true"><h2></h2><p></p><p></p><p></p><div class="row"><button id="wgo" class="pri" type="button"></button><button id="wsnd" type="button"></button><button id="wgd" type="button"></button></div><select id="wlang" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ur">اردو</option></select></div>
+<div id="guide" role="dialog" aria-label="Guide" aria-modal="true"><div class="gw">
+<button id="gclose" type="button">Close ✕</button>
+<select id="glang" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ur">اردو</option></select>
+<div id="gtext"><h2>How this works</h2>
+<p class="lead">A quiet walk across a pond, all drawn live by code. Scroll to move forward; everything else is optional.</p>
+<h3>What you’re seeing</h3>
+<ul><li><b>The pond.</b> A 3D scene (three.js). Scrolling moves the camera along a path, so you walk at the pace you scroll.</li>
+<li><b>The paintings.</b> Eleven original studies, each made of thousands of random brush strokes generated in code. None copy a real artwork. Each has a short story when you open it.</li>
+<li><b>The sky.</b> One day-night cycle spread over the walk, so the light changes as you go. The Time slider lets you set it yourself.</li>
+<li><b>The life.</b> Lilies open as you near them, frogs hop between pads, koi swim, birds cross by day, and stars and a moon appear at night.</li></ul>
+<h3>Controls</h3>
+<div class="kv"><span>Scroll · hold ↑ ↓ or W S</span><span>Walk</span><span>← →</span><span>Jump to the previous or next painting</span><span>Click a painting</span><span>View it large; click again to close</span><span>Click water</span><span>Ripples. Double-click leaves a lantern</span><span>A · T</span><span>Autoplay · guided tour</span><span>G</span><span>Map of the walk</span><span>N · M</span><span>Narration · ambient sound</span><span>R</span><span>Rain</span><span>P</span><span>Photo (then right-click or press and hold to save)</span><span>C</span><span>Calm mode, with less motion</span><span>F · H · Esc</span><span>Fullscreen · this guide · close anything</span></div>
+<h3>Things to find</h3>
+<p>Seven golden lilies ✦ are hidden along the path, and one rare pale koi swims the whole length. Click them. Your progress is saved in this browser only. Stuck? Menu → Hint (or press K) tells you roughly where to look.</p>
+<h3>Good to know</h3>
+<ul><li>Sound starts off. Turn it on from the button at bottom right; the chord shifts key at each painting.</li>
+<li>“Add your art” (or dropping images on the page) hangs your own pictures in the frames. They stay on your device and reset when you reload.</li>
+<li>If it feels slow, try Calm mode. On phones, Tilt lets you look around by moving the device.</li>
+<li>Menu holds the extra buttons. Copy link shares your spot in the walk.</li></ul></div>
+</div></div>
+<div id="shotv" role="dialog" aria-label="Photo"><img alt="Your photo of the pond"><p>Right-click or press and hold the picture to save it · click to close</p></div>
+<div id="fallback"><p>This experience needs WebGL, which your browser doesn’t seem to support.</p></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+// Intro title, letter by letter
+var h1=document.querySelector('#intro h1');
+"A Century of Water".split('').forEach(function(ch,i){var s=document.createElement('span');s.textContent=ch===' '?'\u00a0':ch;s.style.animationDelay=(i*70)+'ms';h1.appendChild(s)});
+
+var N=11,GAP=14,END=-(GAP*(N+1)),LEN=-END-2;
+var PAL=[["#0e2a3a","#e9b8a0","#f4d9a8","#7fb3a8","#d9748f"],["#123524","#8fc7a0","#e7e0a0","#3f7f6a","#c9d98a"],["#2a1d4a","#f0a0b0","#ffd9a0","#6a7fc0","#b07ad0"],["#1c2f4f","#9ec3e0","#f2f0e0","#5f8fb8","#e8a0a0"],["#3a1f1a","#f2b36b","#ffe2a0","#c46a4a","#7a8fb0"],["#14304a","#b58fd0","#f4c0d8","#3f6aa0","#8fd0c0"],["#10261f","#6fa890","#d8e8b0","#2f6a58","#e0c070"],["#1a2a3a","#a8d0d8","#f0f4f0","#5a8aa0","#d8b0c8"],["#2a3a2a","#c8d8a0","#f6f0c0","#6a9a6a","#e0a0b0"],["#2a1a2a","#d890a0","#f8d0b0","#7a5a9a","#90b8c8"],["#101a2a","#7090c0","#e8d8a8","#3a5a8a","#f0a888"]];
+var CAPS=[["I","Morning on the Pond","Mist lifts, and the first colour is pink."],["II","Arch over Green Water","A small bridge, repeated in its own reflection."],["III","Violet Hour","The day leans, and shadows turn the colour of plums."],["IV","Poplars in Wind","Every leaf a single patient stroke."],["V","Evening Haystack Light","Gold is only blue waiting to be asked."],["VI","Reflections","What floats and what sinks begin to agree."],["VII","The Long Willow","Branches write slowly on the surface."],["VIII","Second Hall: Mirror Pond","Here the frames turn silver and the water answers back."],["IX","Cloud Garden","Sky falls into the pond and floats among the pads."],["X","Heron at Dusk","Stillness is also a kind of brushstroke."],["XI","Last Light on Lilies","Colour leaves slowly, like a guest reluctant to go."],["XII","The Room of Lilies","A hundred years on, the water still opens."]];
+
+var renderer;
+try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});}catch(e){document.getElementById('fallback').style.display='grid';return}
+var PR=Math.min(devicePixelRatio,innerWidth<700?1.5:2),fpsN=0,fpsT=performance.now();renderer.setPixelRatio(PR);
+renderer.setSize(innerWidth,innerHeight);
+document.body.prepend(renderer.domElement);
+var scene=new THREE.Scene();scene.background=new THREE.Color(0x071218);scene.fog=new THREE.FogExp2(0x071218,0.024);
+var cam=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,300);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+var hemi=new THREE.HemisphereLight(0x9fc4e0,0x14221c,.6),sun=new THREE.DirectionalLight(0xfff0d8,1),sdv=new THREE.Vector3();scene.add(hemi,sun,sun.target);
+
+// Shared GLSL: procedural sky (gradient, sun, drifting clouds), used by the sky dome and as the water's reflection
+var SKYGLSL="float hs(vec3 p){return fract(sin(dot(p,vec3(12.9,78.2,37.7)))*43758.5);}"+
+"float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=fract(sin(dot(i,vec2(127.1,311.7)))*43758.5),b=fract(sin(dot(i+vec2(1.,0.),vec2(127.1,311.7)))*43758.5),c=fract(sin(dot(i+vec2(0.,1.),vec2(127.1,311.7)))*43758.5),d=fract(sin(dot(i+vec2(1.,1.),vec2(127.1,311.7)))*43758.5);return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}"+
+"float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*vn(p);p=p*2.03+vec2(17.1,9.2);a*=.5;}return v;}"+
+"vec3 skyCol(vec3 d,float p,float t){float a=p*6.2832+.35,sa=sin(a),day=smoothstep(-.2,.4,sa),tw=exp(-pow(sa*3.5,2.)),h=max(d.y,0.);"+
+"vec3 top=mix(vec3(.02,.04,.1),vec3(.14,.32,.56),day),hor=mix(vec3(.05,.09,.14),vec3(.62,.72,.78),day)+vec3(.8,.35,.3)*tw*.5;vec3 c=mix(hor,top,pow(smoothstep(0.,.7,h),.6));"+
+"vec3 sd=normalize(vec3(.3,sa*.9,-.9));float sdt=max(dot(d,sd),0.);c+=mix(vec3(1.,.82,.6),vec3(1.,.5,.35),tw)*(pow(sdt,12.)*.25+pow(sdt,600.)*4.)*step(-.1,sa);"+
+"float cl=smoothstep(.45,.85,fbm(d.xz/(d.y+.25)*1.6+vec2(t*.01,0.)))*smoothstep(0.,.25,d.y);vec3 cc=mix(vec3(.08,.09,.12),mix(vec3(1.,.97,.95),vec3(1.,.62,.5),tw),day);"+
+"return mix(c,cc*(.55+.45*day)+vec3(.5,.3,.2)*tw*.4,cl*.75);}";
+// Water
+var wu={t:{value:0},p:{value:0},fc:{value:new THREE.Color(.03,.07,.09)},tint:{value:new THREE.Vector3(1,1,1)}};
+var water=new THREE.Mesh(new THREE.PlaneGeometry(240,240,90,90),new THREE.ShaderMaterial({uniforms:wu,
+vertexShader:"uniform float t;varying vec3 vP;varying float vD;void main(){vec3 p=position;p.z+=sin(p.x*.6+t)*.05+sin(p.y*.8+t*1.3)*.04;vec4 mv=modelViewMatrix*vec4(p,1.);vD=-mv.z;vP=(modelMatrix*vec4(p,1.)).xyz;gl_Position=projectionMatrix*mv;}",
+fragmentShader:"uniform float t;uniform float p;uniform vec3 fc;uniform vec3 tint;varying vec3 vP;varying float vD;"+SKYGLSL+
+"void main(){vec2 q=vP.xz;vec2 g=vec2(.6,.3)*cos(dot(q,vec2(.6,.3))*2.1+t*.9)*.05+vec2(-.4,.7)*cos(dot(q,vec2(-.4,.7))*3.3-t*1.2)*.035+vec2(.9,-.2)*cos(dot(q,vec2(.9,-.2))*5.1+t*1.7)*.02;"+
+"float n1=vn(q*2.5+t*.2),n2=vn(q*5.+vec2(-t*.25,t*.15));g+=vec2(n1-.5,n2-.5)*.06;vec3 N=normalize(vec3(-g.x*3.,1.,-g.y*3.)),V=normalize(cameraPosition-vP);"+
+"float fr=.03+.97*pow(1.-max(dot(N,V),0.),5.);vec3 R=reflect(-V,N);R.y=abs(R.y);vec3 refl=skyCol(R,p,t);float a=p*6.2832+.35,sa=sin(a),day=smoothstep(-.2,.4,sa);"+
+"vec3 deep=mix(vec3(.01,.04,.06),vec3(.03,.16,.17),day),shallow=vec3(.05,.2,.18)*(.4+.6*day);vec3 c=mix(mix(deep,shallow,.35+.35*n1),refl,clamp(fr*1.1,0.,1.));"+
+"vec3 sd=normalize(vec3(.3,sa*.9,-.9));c+=vec3(1.,.85,.65)*pow(max(dot(R,sd),0.),180.)*step(0.,sa)*2.2;c*=tint;float f=1.-exp(-vD*vD*.0007);c=mix(c,fc,clamp(f,0.,1.));gl_FragColor=vec4(c,1.);}"}));
+water.rotation.x=-Math.PI/2;scene.add(water);
+
+// Sky dome: the same procedural sky the water reflects, plus stars
+var su={p:{value:0},t:{value:0}},sky=new THREE.Mesh(new THREE.SphereGeometry(280,32,16),new THREE.ShaderMaterial({uniforms:su,side:THREE.BackSide,depthWrite:false,fog:false,
+vertexShader:"varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+fragmentShader:"uniform float p;uniform float t;varying vec3 vP;"+SKYGLSL+"void main(){vec3 d=normalize(vP);vec3 c=skyCol(d,p,t);float day=smoothstep(-.2,.4,sin(p*6.2832+.35));c+=step(.9985,hs(floor(d*160.)))*smoothstep(.2,.7,max(d.y,0.))*.6*(1.-day);gl_FragColor=vec4(c,1.);}"}));sky.renderOrder=-1;scene.add(sky);
+
+// Procedural brush-stroke "paintings" (original studies, generated in code)
+function art(i){
+  var c=document.createElement('canvas');c.width=640;c.height=480;var x=c.getContext('2d'),P=PAL[i],R=Math.random;
+  var g=x.createLinearGradient(0,0,0,480);g.addColorStop(0,P[0]);g.addColorStop(1,P[1]);x.fillStyle=g;x.fillRect(0,0,640,480);
+  x.lineCap='round';
+  function d(px,py,col,l,a,w){x.strokeStyle=col;x.globalAlpha=.55;x.lineWidth=w;x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}
+  for(var k=0;k<2200;k++)d(R()*640,R()*480,P[(R()*5)|0],8+R()*18,(R()-.5)*.6+(R()<.5?0:Math.PI),3+R()*5);
+  for(k=0;k<800;k++){var a=R()*6.283,r=R(),px,py,col=P[2+k%3],ang=(R()-.5)*.8;
+    if(i==0){px=320+Math.cos(a)*r*70;py=170+Math.sin(a)*r*70;col=P[4]}
+    else if(i==1){var t=R()*Math.PI;px=100+t/Math.PI*440;py=330-Math.sin(t)*150+R()*14}
+    else if(i==2||i==3){px=60+(k%9)*70+R()*10;py=40+R()*400;ang=1.57+(R()-.5)*.3}
+    else if(i==4){px=320+Math.cos(a)*r*200;py=330+Math.sin(a)*r*80}
+    else if(i==5){px=R()*640;py=300+R()*150;ang=(R()-.5)*.3}
+    else{px=60+(k%6)*100+Math.sin(R()*6)*20;py=R()*300;ang=1.57+(R()-.5)*.5}
+    d(px,py,col,6+R()*12,ang,3+R()*4)}
+  x.globalAlpha=1;ARTS.push(c);return new THREE.CanvasTexture(c);
+}
+var frames=[],ARTS=[];
+for(var i=0;i<N;i++){
+  var gr=new THREE.Group(),side=i%2?1:-1;
+  var bord=new THREE.Mesh(new THREE.BoxGeometry(6.5,5,.2),new THREE.MeshBasicMaterial({color:i>6?0xb9c7d6:0xc9a45c}));
+  var pic=new THREE.Mesh(new THREE.PlaneGeometry(6,4.5),new THREE.MeshBasicMaterial({map:art(i)}));pic.position.z=.11;
+  var refl=pic.clone();refl.material=new THREE.MeshBasicMaterial({map:pic.material.map,transparent:true,opacity:.22});refl.scale.y=-1;refl.position.y=-5.2;
+  var glow=new THREE.Mesh(new THREE.PlaneGeometry(9,7),new THREE.MeshBasicMaterial({color:new THREE.Color(PAL[i][3]),transparent:true,opacity:.12,blending:THREE.AdditiveBlending,depthWrite:false}));glow.position.z=-.2;
+  gr.add(glow,bord,pic,refl);
+  gr.position.set(side*4.6,3,-GAP*(i+1));gr.rotation.y=-side*.45;scene.add(gr);frames.push({g:gr,y:3,ph:i*1.3,pic:pic});
+}
+
+// Lily pads + flowers
+var pads=[],padGeo=new THREE.CircleGeometry(1,40,0,Math.PI*1.9);
+var padTex=(function(){var c=document.createElement('canvas');c.width=c.height=256;var x=c.getContext('2d'),g=x.createRadialGradient(128,128,8,128,128,128);g.addColorStop(0,'#4f8a3c');g.addColorStop(.7,'#2f6a2c');g.addColorStop(1,'#1d4a22');x.fillStyle=g;x.fillRect(0,0,256,256);x.strokeStyle='rgba(190,230,150,.28)';x.lineWidth=1.4;
+ for(var k=0;k<28;k++){var a=k/28*6.283;x.beginPath();x.moveTo(128,128);x.lineTo(128+Math.cos(a)*126,128+Math.sin(a)*126);x.stroke()}
+ for(k=0;k<260;k++){x.fillStyle='rgba('+((30+Math.random()*60)|0)+','+((80+Math.random()*60)|0)+',30,.07)';x.beginPath();x.arc(Math.random()*256,Math.random()*256,3+Math.random()*10,0,6.283);x.fill()}
+ x.strokeStyle='rgba(235,255,200,.22)';x.lineWidth=5;x.beginPath();x.arc(128,128,119,0,6.283);x.stroke();return new THREE.CanvasTexture(c)})();
+var padMats=[0xffffff,0xe8f4d8,0xd8e8c0,0xf2f0c8,0xc8dcb0].map(function(c){return new THREE.MeshLambertMaterial({map:padTex,color:c,side:THREE.DoubleSide})});
+function bake(parts){var P=[],N=[],C=[];parts.forEach(function(pt){var g=pt.geo.clone().toNonIndexed();g.applyMatrix4(pt.m);var pos=g.attributes.position,nor=g.attributes.normal;for(var i=0;i<pos.count;i++){P.push(pos.getX(i),pos.getY(i),pos.getZ(i));N.push(nor.getX(i),nor.getY(i),nor.getZ(i));var u=Math.min(1,Math.hypot(pos.getX(i),pos.getZ(i))/pt.r),c=pt.c0.clone().lerp(pt.c1,u);C.push(c.r,c.g,c.b)}});
+ var bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.Float32BufferAttribute(P,3));bg.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));bg.setAttribute('color',new THREE.Float32BufferAttribute(C,3));return bg}
+var petalG=new THREE.SphereGeometry(1,8,6),flowerGeos=[['#fff3d6','#ffc6dc'],['#ffe9ee','#e0508a'],['#fffaf0','#f6e0ea'],['#fff2b0','#f0c040']].map(function(v){
+ var parts=[],c0=new THREE.Color(v[0]),c1=new THREE.Color(v[1]);
+ [[10,0,.45,.34,.11],[8,.39,.9,.28,.1],[6,0,1.25,.2,.08]].forEach(function(r){for(var k=0;k<r[0];k++){var m=new THREE.Matrix4().makeRotationY(r[1]+k/r[0]*6.2832).multiply(new THREE.Matrix4().makeRotationX(r[2])).multiply(new THREE.Matrix4().makeTranslation(0,0,-r[3])).multiply(new THREE.Matrix4().makeScale(r[4],.03,r[3]));parts.push({geo:petalG,m:m,c0:c0,c1:c1,r:.4})}});
+ parts.push({geo:new THREE.SphereGeometry(.07,8,6),m:new THREE.Matrix4().makeTranslation(0,.1,0),c0:new THREE.Color('#f2c94c'),c1:new THREE.Color('#f2c94c'),r:1});return bake(parts)});
+var flowerMat=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide,emissive:0x221018});
+function lily(px,pz,s,flower){
+  var g=new THREE.Group(),m=new THREE.Mesh(padGeo,padMats[(Math.random()*padMats.length)|0]);
+  m.rotation.x=-Math.PI/2;m.rotation.z=Math.random()*6.28;m.scale.setScalar(s);g.add(m);g.rotation.set((Math.random()-.5)*.06,0,(Math.random()-.5)*.06);
+  var fg=new THREE.Group();if(flower){var fl=new THREE.Mesh(flowerGeos[(Math.random()*flowerGeos.length)|0],flowerMat);fl.scale.setScalar(.8+Math.random()*.6);fl.rotation.y=Math.random()*6.28;fg.add(fl);g.add(fg)}
+  g.position.set(px,.02,pz);scene.add(g);pads.push({g:g,fg:flower?fg:null,ph:Math.random()*6.28,s:.6+Math.random()*.6});
+}
+for(i=0;i<250;i++){var z=6-Math.random()*190,xx=(Math.random()-.5)*50;if(Math.abs(xx)<2.4)xx+=xx<0?-3:3;lily(xx,z,.7+Math.random()*1.1,Math.random()<.22)}
+for(i=0;i<110;i++){var a2=Math.random()*6.283,rr=4+Math.random()*16;lily(Math.cos(a2)*rr,END+Math.sin(a2)*rr,.9+Math.random()*1.3,Math.random()<.45)}
+
+// Floating pollen / fireflies
+var PC=360,pp=new Float32Array(PC*3);for(i=0;i<PC;i++){pp[i*3]=(Math.random()-.5)*30;pp[i*3+1]=Math.random()*8;pp[i*3+2]=6-Math.random()*190}
+var pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+var pts=new THREE.Points(pg,new THREE.PointsMaterial({color:0xf6d9a8,size:.09,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(pts);
+
+// Scroll + pointer
+var target=0,prog=0,mx=0,my=0,tx=0,ty=0,reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function onScroll(){var m=document.documentElement.scrollHeight-innerHeight;target=m>0?Math.min(1,Math.max(0,scrollY/m)):0}
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+addEventListener('pointermove',function(e){if(window.__gyro)return;tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5},{passive:true});
+addEventListener('resize',function(){renderer.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()});
+
+// Drifting fog banks you walk through
+var fogC=new THREE.Color(),mist=[];function sm(a,b,x){x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)}
+(function(){var c=document.createElement('canvas');c.width=c.height=128;var x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);var tex=new THREE.CanvasTexture(c);for(var k=0;k<46;k++){var s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:.2,depthWrite:false,fog:false}));var sc=10+Math.random()*14;s.scale.set(sc,sc*.35,1);s.position.set((Math.random()-.5)*26,.5+Math.random()*2.5,5-Math.random()*(-END+10));scene.add(s);mist.push({s:s,x:s.position.x,ph:Math.random()*6.28,o:.14+Math.random()*.16})}})();
+
+// Butterflies drifting over the pond
+var fly=[];for(var k=0;k<18;k++){var g=new THREE.Group(),wm=new THREE.MeshBasicMaterial({color:[0xf2c0d8,0xf6e6a0,0xa8e0e0][k%3],side:THREE.DoubleSide,transparent:true,opacity:.85}),mk=function(sx){var p=new THREE.Group(),w=new THREE.Mesh(new THREE.CircleGeometry(.2,10),wm);w.rotation.x=-Math.PI/2;w.position.x=sx*.2;p.add(w);g.add(p);return p},l=mk(-1),rr=mk(1);g.add(new THREE.Mesh(new THREE.SphereGeometry(.05,6,6),new THREE.MeshBasicMaterial({color:0xffffff})));scene.add(g);fly.push({g:g,l:l,rr:rr,cx:(Math.random()-.5)*12,cz:5-Math.random()*120,r:2+Math.random()*3,sp:.25+Math.random()*.3,ph:Math.random()*6.28})}
+
+// Click ripples + painting inspection
+var ray=new THREE.Raycaster(),mv=new THREE.Vector2(),rings=[],ringGeo=new THREE.RingGeometry(.9,1,48),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+function ripple(pt,soft){if(rings.length>60)return;var n=performance.now()/1000;for(var k=0;k<(soft?1:3);k++){var m=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xf2d8e8,transparent:true,opacity:.7,side:THREE.DoubleSide,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(pt.x,.05,pt.z);scene.add(m);rings.push({m:m,t0:n+k*.35,o:soft?.3:.7})}}
+function stepFx(t){var n=performance.now()/1000;
+ var sa=Math.sin(ph()*6.2832+.35),day=sm(-.2,.4,sa),tw=Math.exp(-Math.pow(sa*3.5,2));
+ fogC.setRGB(.03+.42*day+.12*tw,.07+.48*day+.05*tw,.09+.49*day+.05*tw);
+ scene.fog.color.copy(fogC);scene.background.copy(fogC);wu.fc.value.copy(fogC);
+ var dayLit=sa>-.05;if(dayLit)sdv.set(.3,sa*.9,-.9);else sdv.set(-55,45,-170);sdv.normalize();sun.position.copy(cam.position).addScaledVector(sdv,100);sun.target.position.copy(cam.position);sun.target.updateMatrixWorld();
+ sun.color.setRGB(dayLit?1:.55,dayLit?.94-.3*tw:.7,dayLit?.82-.4*tw:1);sun.intensity=dayLit?.15+1.05*day:.3;hemi.intensity=.22+.5*day;
+ var dt=Math.min(.1,t-(stepFx.l||t));stepFx.l=t;scene.fog.density=.024+.014*Math.pow(Math.max(0,Math.sin(prog*18)),2)+(rain?.012:0);stepRain(dt);
+ if(auto){if(target>.998)setAuto(false);else{accA+=dt*innerHeight*(+document.getElementById('spd').value)/100;var ia=accA|0;if(ia){scrollBy(0,ia);accA-=ia}}}
+ for(var k=0;k<pads.length;k++){var q=pads[k];if(q.fg){var bl=sm(14,3,q.g.position.distanceTo(cam.position));q.fg.scale.setScalar(.2+.8*bl)}}
+ if(!reduce)for(var j=0;j<koi.length;j++){var f2=koi[j],q2=t*f2.sp+f2.ph;f2.g.position.set(f2.cx+Math.cos(q2)*f2.r,.1,f2.cz+Math.sin(q2)*f2.r*.6);f2.g.rotation.y=Math.atan2(Math.sin(q2),-.6*Math.cos(q2))+Math.sin(t*6+f2.ph)*.15}
+ if(day<.25&&n-ssT>ssN){ssT=n;ssN=3+Math.random()*5;ss.position.set(cam.position.x+(Math.random()-.5)*160,70+Math.random()*50,cam.position.z-120-Math.random()*60)}
+ var sa2=n-ssT;if(day<.25&&sa2<.9){ss.material.opacity=1-sa2/.9;ss.position.x+=dt*70;ss.position.y-=dt*22}else ss.material.opacity=0;
+ pts.material.opacity=.25+.6*(1-day);
+ if(!todM)todEl.value=Math.round(prog*100);updateArrow(n);
+ if(walkDir){wAcc+=walkDir*dt*innerHeight*.35;var iw=wAcc>0?Math.floor(wAcc):Math.ceil(wAcc);if(iw){scrollBy(0,iw);wAcc-=iw}}
+ if(!reduce){var rq=t*.06+rare.ph,rdx=-9*1.7*Math.sin(rq*1.7),rdz=70*Math.cos(rq);rare.g.position.set(Math.cos(rq*1.7)*9,.12,-80+Math.sin(rq)*70);rare.g.rotation.y=Math.atan2(-rdx,-rdz)+Math.sin(t*5)*.12;if(!rare.got)rare.h.material.opacity=.6+.3*Math.sin(t*3)}
+ gold.forEach(function(G){if(!G.got){G.b.position.y=.5+Math.sin(t*2+G.ph)*.08;G.h.material.opacity=.5+.4*Math.sin(t*2.5+G.ph)}});
+ for(var bi=0;bi<birds.length;bi++){var B=birds[bi];if(!reduce){B.x+=dt*B.sp;if(B.x>90)B.x=-90}B.l.position.set(cam.position.x+B.x,B.y,cam.position.z-B.d);B.l.scale.set(B.s,B.s*(reduce?1:.6+Math.abs(Math.sin(t*3+B.ph))*.8),B.s);B.l.material.opacity=day*.8}
+ if(!reduce)for(var fi2=0;fi2<frogs.length;fi2++){var F=frogs[fi2];if(!F.b){if(n>F.next){var best=null,bd=1e9;for(var pj=0;pj<12;pj++){var P2=pads[(Math.random()*pads.length)|0].g.position,dd=P2.distanceTo(F.a);if(dd>1.2&&dd<5&&dd<bd){bd=dd;best=P2}}if(best){F.b=best.clone();F.t0=n;F.g.rotation.y=Math.atan2(F.a.x-F.b.x,F.a.z-F.b.z)}else F.next=n+2}}else{var u2=(n-F.t0)/.9;if(u2>=1){F.a.copy(F.b);F.g.position.set(F.b.x,.14,F.b.z);ripple(F.b,true);F.b=null;F.next=n+3+Math.random()*6}else{F.g.position.set(F.a.x+(F.b.x-F.a.x)*u2,.14+Math.sin(u2*Math.PI)*.7,F.a.z+(F.b.z-F.a.z)*u2)}}}if(mapOn)mkr.setAttribute('cx',60+880*prog*LEN/-END);
+ for(var li=0;li<lant.length;li++){var L=lant[li];L.g.position.set(L.x+Math.sin(t*.2+L.ph)*.6,Math.sin(t*1.3+L.ph)*.04,L.z+Math.cos(t*.17+L.ph)*.4);L.s.material.opacity=.35+.6*(1-day)}
+ moon.position.set(cam.position.x-55,-10+75*sm(-.35,.45,-sa),cam.position.z-170);moon.material.opacity=1-day;mh.material.opacity=.6*(1-day);mref.position.set(cam.position.x-19,.15,cam.position.z-60);mref.material.opacity=.5*(1-day)*(.8+.2*Math.sin(t*2));
+ for(var h2=0;h2<herons.length;h2++){var hh=herons[h2],cy=(t*.12+hh.ph)%1,dp=cy>.8?Math.sin((cy-.8)/.2*Math.PI):0;hh.nk.rotation.x=-dp*1.6+Math.sin(t*.5+hh.ph*6)*.05}
+ var sp=Math.abs(target-prog);if(sp>.0003&&n-lastW>.3&&!reduce){lastW=n;ripple(new THREE.Vector3(cam.position.x,0,cam.position.z-1.2),true)}
+ if(LP)LP.frequency.value=Math.min(2500,400+sp*60000+(rain?900:0));
+ for(var k=0;k<mist.length;k++){var m=mist[k],dz=Math.abs(m.s.position.z-cam.position.z);m.s.position.x=m.x+Math.sin(t*.1+m.ph)*2;m.s.material.color.copy(fogC).addScalar(.2);m.s.material.opacity=m.o*Math.min(1,dz/5)*(.6+.4*Math.sin(t*.3+m.ph))*(.5+.5*day)}
+for(var k=rings.length-1;k>=0;k--){var r=rings[k],a=n-r.t0;if(a<0){r.m.visible=false;continue}r.m.visible=true;r.m.scale.setScalar(.3+a*4.5);r.m.material.opacity=Math.max(0,r.o*(1-a/2.4));if(a>2.4){scene.remove(r.m);r.m.material.dispose();rings.splice(k,1)}}
+ if(!reduce)for(k=0;k<fly.length;k++){var f=fly[k],q=t*f.sp+f.ph;f.g.position.set(f.cx+Math.cos(q)*f.r,1.1+Math.sin(q*2)*.4,f.cz+Math.sin(q)*f.r);f.g.rotation.y=-q;f.l.rotation.z=Math.sin(t*18+f.ph)*.9;f.rr.rotation.z=-f.l.rotation.z}}
+var lb=document.getElementById('lb'),lbc=lb.querySelector('canvas');
+function openLb(i){lb.querySelector('p').dataset.s=STORY[i];say(STORY[i]);lbc.getContext('2d').drawImage(ARTS[i],0,0);lb.querySelector('p').textContent=CAPS[i][1]+' — '+CAPS[i][2];lb.classList.add('on');requestAnimationFrame(function(){lb.classList.add('show')})}
+function closeLb(){lb.classList.remove('show');setTimeout(function(){lb.classList.remove('on')},500)}
+lb.addEventListener('click',closeLb);addEventListener('keydown',function(e){if(e.key==='Escape')closeLb()});
+var lastR=0;function aim(e){mv.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(mv,cam);return ray.intersectObjects(frames.map(function(f){return f.pic}))}
+addEventListener('pointermove',function(e){var h=aim(e).length||ray.intersectObjects(goldHit).length||(!rare.got&&ray.intersectObject(rare.m).length);document.body.style.cursor=h?'zoom-in':'';var n=performance.now();if(!h&&!reduce&&n-lastR>120&&e.pointerType==='mouse'&&!lb.classList.contains('on')){var pt=new THREE.Vector3();if(ray.ray.intersectPlane(plane,pt)&&pt.distanceTo(cam.position)<30){lastR=n;ripple(pt,true)}}},{passive:true});
+addEventListener('click',function(e){if(e.target.closest&&e.target.closest('button,#lb'))return;var hit=aim(e);if(hit.length){var i=frames.map(function(f){return f.pic}).indexOf(hit[0].object);chime();openLb(i);return}var gh=ray.intersectObjects(goldHit);if(gh.length){collect(gh[0].object.userData.i);return}if(!rare.got&&ray.intersectObject(rare.m).length){catchKoi();return}var pt=new THREE.Vector3();if(ray.ray.intersectPlane(plane,pt)&&pt.distanceTo(cam.position)<60){ripple(pt);chime()}});
+
+// Generative ambient sound (starts only after you press the button)
+var AC,master,LP,OSCS=[],snd=false;
+function startAudio(){AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0;master.connect(AC.destination);
+ [196,246.94,293.66,392,493.88].forEach(function(f,k){var o=AC.createOscillator(),g=AC.createGain(),l=AC.createOscillator(),lg=AC.createGain();o.type='sine';o.frequency.value=f;o._b=f;OSCS.push(o);g.gain.value=.05;l.frequency.value=.07+k*.03;lg.gain.value=.03;l.connect(lg);lg.connect(g.gain);o.connect(g);g.connect(master);o.start();l.start()});
+ var buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=buf.getChannelData(0);for(var k=0;k<d.length;k++)d[k]=Math.random()*2-1;var ns=AC.createBufferSource();ns.buffer=buf;ns.loop=true;var lp=LP=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=500;var ng=AC.createGain();ng.gain.value=.06;ns.connect(lp);lp.connect(ng);ng.connect(master);ns.start()}
+function chime(){if(!snd)return;var o=AC.createOscillator(),g=AC.createGain(),n=AC.currentTime;o.type='sine';o.frequency.value=[523.25,587.33,659.25,783.99,880][(Math.random()*5)|0];g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(.12,n+.02);g.gain.exponentialRampToValueAtTime(.0001,n+2.2);o.connect(g);g.connect(master);o.start();o.stop(n+2.3)}
+var sb=document.getElementById('snd');sb.addEventListener('click',function(){if(!AC){startAudio();tune(cur)}if(AC.state==='suspended')AC.resume();snd=!snd;master.gain.linearRampToValueAtTime(snd?.8:0,AC.currentTime+1.2);sb.textContent=snd?'Sound on':'Sound off';sb.setAttribute('aria-pressed',snd)});
+
+// Lanterns (double-click), moon, herons, share link
+function mkGlow(c){var cv=document.createElement('canvas');cv.width=cv.height=64;var x=cv.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba('+c+',1)');g.addColorStop(1,'rgba('+c+',0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(cv)}
+var lt=mkGlow('255,200,120'),wt=mkGlow('220,232,255'),lant=[];
+function lantern(pt){if(lant.length>=14){var o=lant.shift();scene.remove(o.g)}var g=new THREE.Group(),b=new THREE.Mesh(new THREE.BoxGeometry(.28,.36,.28),new THREE.MeshBasicMaterial({color:0xffc070})),s=new THREE.Sprite(new THREE.SpriteMaterial({map:lt,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));s.scale.set(3,3,1);b.position.y=.2;s.position.y=.3;g.add(b,s);g.position.set(pt.x,0,pt.z);scene.add(g);lant.push({g:g,s:s,ph:Math.random()*6.28,x:pt.x,z:pt.z})}
+addEventListener('dblclick',function(e){if(e.target.closest&&e.target.closest('button,#lb,input'))return;if(aim(e).length)return;var pt=new THREE.Vector3();if(ray.ray.intersectPlane(plane,pt)&&pt.distanceTo(cam.position)<40){lantern(pt);chime()}});
+var moon=new THREE.Mesh(new THREE.SphereGeometry(6,24,16),new THREE.MeshBasicMaterial({color:0xf1f0e6,transparent:true,fog:false})),mh=new THREE.Sprite(new THREE.SpriteMaterial({map:wt,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));mh.scale.set(60,60,1);moon.add(mh);scene.add(moon);
+var mref=new THREE.Mesh(new THREE.PlaneGeometry(8,70),new THREE.MeshBasicMaterial({map:wt,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));mref.rotation.order='YXZ';mref.rotation.set(-Math.PI/2,.31,0);scene.add(mref);
+var herons=[];function heron(x,z,ry){var g=new THREE.Group(),m=new THREE.MeshLambertMaterial({color:0xd5dde0}),d=new THREE.MeshLambertMaterial({color:0x3a4a52}),b=new THREE.Mesh(new THREE.SphereGeometry(.35,10,8),m);b.scale.set(1,.8,1.7);b.position.y=1.35;var l1=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.25,5),d);l1.position.set(.1,.62,0);var l2=l1.clone();l2.position.x=-.1;var tail=new THREE.Mesh(new THREE.ConeGeometry(.12,.5,6),d);tail.rotation.x=Math.PI/2;tail.position.set(0,1.4,.6);var nk=new THREE.Group();nk.position.set(0,1.5,-.5);var n1=new THREE.Mesh(new THREE.CylinderGeometry(.035,.05,.9,6),m);n1.position.y=.45;var hd=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),m);hd.position.y=.95;var bk=new THREE.Mesh(new THREE.ConeGeometry(.03,.3,5),new THREE.MeshLambertMaterial({color:0xe8c070}));bk.rotation.x=-Math.PI/2;bk.position.set(0,.95,-.2);nk.add(n1,hd,bk);g.add(b,l1,l2,tail,nk);g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);herons.push({nk:nk,ph:Math.random()})}
+[[6,-32,.5],[-7,-76,-.6],[5,-125,.3],[-6,-160,-.4]].forEach(function(a){heron(a[0],a[1],a[2])});
+function readHash(){var h=location.hash.slice(1),m=/^study-(\d+)$/.exec(h);if(m)go(+m[1]-1,true);else if(h==='room')go(N,true)}
+addEventListener('hashchange',readHash);
+var cb=document.getElementById('copy');cb.addEventListener('click',function(){try{navigator.clipboard.writeText(location.href).then(function(){cb.textContent='Copied'},function(){cb.textContent='Use address bar'})}catch(e){cb.textContent='Use address bar'}setTimeout(function(){cb.textContent='Copy link'},1800)});
+
+// Koi gliding on the surface, shooting stars at night, painting stories
+var koi=[];(function(){var sh=new THREE.Shape();sh.moveTo(0,.5);sh.bezierCurveTo(.28,.3,.28,-.2,.1,-.45);sh.lineTo(.2,-.8);sh.lineTo(0,-.65);sh.lineTo(-.2,-.8);sh.lineTo(-.1,-.45);sh.bezierCurveTo(-.28,-.2,-.28,.3,0,.5);var geo=new THREE.ShapeGeometry(sh);for(var k=0;k<14;k++){var m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:[0xf28a3c,0xf4efe6,0xe0502c,0xf6c27a][k%4],transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false}));m.rotation.x=-Math.PI/2;var g=new THREE.Group();g.add(m);g.scale.setScalar(.9+Math.random()*.7);scene.add(g);koi.push({g:g,cx:(Math.random()-.5)*16,cz:5-Math.random()*(-END+10),r:2+Math.random()*4,sp:.12+Math.random()*.15,ph:Math.random()*6.28})}})();
+var ss=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(8,-2.5,0)]),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0,fog:false}));ss.frustumCulled=false;scene.add(ss);var ssT=-9,ssN=0,SEEN={};
+var STORY=["Made of thousands of tiny marks, drawn by code: no photograph, only repetition and light.","A bridge needs its reflection to feel finished.","Dusk is when green quietly turns to violet.","Vertical strokes, leaning the way the wind does.","A warm mound against cold water: contrast does the painting.","Colour sits in layers, like silt in a pond.","Long drooping lines, drawn slowly, one after another.","The second hall: the same pond, seen at a cooler distance.","Clouds are just water that decided to climb.","Patience reads as a single upright line.","The last warm colours hold on a little longer.","Everything you walked past opens here."];
+
+// Rain, chapter dots, autoplay and keyboard shortcuts
+var rain=false,auto=false,accA=0,lastW=0,RN=700,rp=new Float32Array(RN*6),rd=[];for(var k=0;k<RN;k++)rd.push({x:(Math.random()-.5)*24,y:Math.random()*14,z:3-Math.random()*28});
+var rg=new THREE.BufferGeometry();rg.setAttribute('position',new THREE.BufferAttribute(rp,3));
+var rl=new THREE.LineSegments(rg,new THREE.LineBasicMaterial({color:0xaac8dc,transparent:true,opacity:.4,depthWrite:false}));rl.frustumCulled=false;rl.visible=false;scene.add(rl);
+function stepRain(dt){if(!rain)return;for(var k=0;k<RN;k++){var d=rd[k];d.y-=dt*20;if(d.y<0){d.y=14;d.x=(Math.random()-.5)*24;d.z=3-Math.random()*28;if(Math.random()<.12)ripple(new THREE.Vector3(cam.position.x+d.x,0,cam.position.z+d.z),true)}var X=cam.position.x+d.x,Z=cam.position.z+d.z;rp[k*6]=X;rp[k*6+1]=d.y;rp[k*6+2]=Z;rp[k*6+3]=X;rp[k*6+4]=d.y+.7;rp[k*6+5]=Z}rg.attributes.position.needsUpdate=true}
+var dots=document.getElementById('dots'),ab=document.getElementById('auto'),rb=document.getElementById('rain');
+function go(i,inst){i=Math.max(0,Math.min(N,i));var m=document.documentElement.scrollHeight-innerHeight,p=i>=N?1:(GAP*(i+1)-6)/LEN;scrollTo({top:p*m,behavior:(reduce||inst)?'auto':'smooth'})}
+function setAuto(v){auto=v;ab.textContent='Autoplay '+(v?'on':'off');ab.setAttribute('aria-pressed',v)}
+for(var k=0;k<=N;k++)(function(i){var b=document.createElement('button');b.type='button';b.title=CAPS[i][1];b.setAttribute('aria-label',CAPS[i][1]);b.addEventListener('click',function(){setAuto(false);if(tour)setTour(false);go(i)});dots.appendChild(b)})(k);
+ab.addEventListener('click',function(){if(tour)setTour(false);setAuto(!auto)});
+['wheel','touchstart','keydown'].forEach(function(ev){addEventListener(ev,function(e){if(auto&&!(ev==='keydown'&&e.key&&e.key.toLowerCase()==='a'))setAuto(false)},{passive:true})});
+rb.addEventListener('click',function(){rain=!rain;rl.visible=rain;rb.textContent='Rain '+(rain?'on':'off');rb.setAttribute('aria-pressed',rain)});
+addEventListener('keydown',function(e){if(e.ctrlKey||e.metaKey||e.altKey)return;var k=(e.key||'').toLowerCase();if(lb.classList.contains('on')||gd.classList.contains('on')||wel.classList.contains('on')){}else if(k==='arrowright'||k==='arrowleft'){e.preventDefault();go((cur<0?-1:cur)+(k==='arrowright'?1:-1))}else if(k==='a')ab.click();else if(k==='r')rb.click();else if(k==='m')sb.click();else if(k==='t')tourBtn.click();else if(k==='g')mapBtn.click();else if(k==='n')nb.click();else if(k==='p')photoBtn.click();else if(k==='c')calmBtn.click();else if(k==='h'||k==='?')guideBtn.click();else if(k==='f')fsBtn.click();else if(k==='k')hintBtn.click()});
+
+// Narration, photo mode, calm mode, your own art, tools menu
+var narrate=false,nb=document.getElementById('narr'),photoBtn=document.getElementById('photo'),calmBtn=document.getElementById('calm'),artBtn=document.getElementById('art'),fi=document.getElementById('file'),shv=document.getElementById('shotv'),shot=false,slot=0;
+function say(t){if(!narrate)return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=.9;u.pitch=.95;speechSynthesis.speak(u)}catch(e){}}
+function narr(i){if(i>=0)say(CAPS[i][1]+'. '+CAPS[i][2])}
+if(!('speechSynthesis' in window))nb.hidden=true;
+nb.addEventListener('click',function(){narrate=!narrate;nb.textContent='Narrate '+(narrate?'on':'off');nb.setAttribute('aria-pressed',narrate);if(narrate)narr(cur);else try{speechSynthesis.cancel()}catch(e){}});
+function snap(){try{shv.querySelector('img').src=renderer.domElement.toDataURL('image/jpeg',.92);shv.classList.add('on')}catch(e){}}
+photoBtn.addEventListener('click',function(){shot=true});shv.addEventListener('click',function(){shv.classList.remove('on')});
+document.body.classList.toggle('calm',reduce);calmBtn.textContent='Calm '+(reduce?'on':'off');
+calmBtn.addEventListener('click',function(){reduce=!reduce;document.body.classList.toggle('calm',reduce);calmBtn.textContent='Calm '+(reduce?'on':'off');calmBtn.setAttribute('aria-pressed',reduce)});
+function addImgs(files){Array.prototype.slice.call(files).filter(function(f){return /^image\//.test(f.type)}).slice(0,N).forEach(function(f){var i=slot%N;slot++;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var c=ARTS[i],x=c.getContext('2d'),k=Math.max(640/im.width,480/im.height),w=im.width*k,h=im.height*k;x.globalAlpha=1;x.drawImage(im,(640-w)/2,(480-h)/2,w,h);frames[i].pic.material.map.needsUpdate=true;STORY[i]='One of your own pictures, hung on the pond.'};im.src=r.result};r.readAsDataURL(f)})}
+artBtn.addEventListener('click',function(){fi.click()});fi.addEventListener('change',function(){addImgs(fi.files);fi.value=''});
+addEventListener('dragover',function(e){e.preventDefault()});addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer&&e.dataTransfer.files)addImgs(e.dataTransfer.files)});
+var tools=document.createElement('div');tools.id='tools';var mb=document.createElement('button');mb.id='menu';mb.type='button';mb.textContent='Menu';tools.appendChild(mb);
+['pal','auto','spd','tod','todauto','rain','tour','map','narr','photo','calm','art','copy','fs','hint'].forEach(function(id){tools.appendChild(document.getElementById(id))});document.querySelector('.ui').appendChild(tools);
+if(innerWidth<700)tools.classList.add('hide');mb.addEventListener('click',function(){tools.classList.toggle('hide')});
+
+// Per-painting sound, guided tour, gallery map
+var ROOTS=[0,2,4,7,9,5,3,-2,0,2,5,-3];
+function tune(i){if(!AC)return;var s=i>=0?ROOTS[i]||0:0;OSCS.forEach(function(o){o.frequency.setTargetAtTime(o._b*Math.pow(2,s/12),AC.currentTime,1.5)})}
+var tour=false,tourI=0,tT=0,tourBtn=document.getElementById('tour'),mapBtn=document.getElementById('map');
+function setTour(v){tour=v;tourBtn.textContent='Tour '+(v?'on':'off');tourBtn.setAttribute('aria-pressed',v);clearTimeout(tT);if(v){setAuto(false);closeMap();tourI=0;tourGo()}else if(lb.classList.contains('on'))closeLb()}
+function tourGo(){if(!tour)return;if(tourI>N){setTour(false);return}go(tourI);tT=setTimeout(function(){if(!tour)return;if(tourI<N){openLb(tourI);tT=setTimeout(function(){closeLb();tourI++;tourGo()},6500)}else{tourI++;tourGo()}},5500)}
+tourBtn.addEventListener('click',function(){setTour(!tour)});
+['wheel','touchstart'].forEach(function(ev){addEventListener(ev,function(){if(tour&&!lb.classList.contains('on'))setTour(false)},{passive:true})});
+var mv2=document.getElementById('mapv'),mapOn=false,HER=[[6,-32],[-7,-76],[5,-125],[-6,-160]];
+var sv='<svg viewBox="0 0 1000 300" width="100%" role="img" aria-label="Map of the walk"><line x1="60" y1="150" x2="940" y2="150" stroke="currentColor" stroke-opacity=".35" stroke-dasharray="4 6"/>';
+for(var u=0;u<N;u++){var mx2=60+880*GAP*(u+1)/-END,my2=u%2?105:195;sv+='<g data-i="'+u+'" tabindex="0" role="button" aria-label="'+CAPS[u][1]+'" style="cursor:pointer"><line x1="'+mx2+'" y1="150" x2="'+mx2+'" y2="'+my2+'" stroke="currentColor" stroke-opacity=".25"/><rect x="'+(mx2-17)+'" y="'+(my2-13)+'" width="34" height="26" rx="2" fill="none" stroke="'+(u>6?'#b9c7d6':'#c9a45c')+'" stroke-width="2.5"/><text x="'+mx2+'" y="'+(my2+4)+'" text-anchor="middle" font-size="11" fill="currentColor" font-family="system-ui,sans-serif">'+(u+1)+'</text></g>'}
+HER.forEach(function(h){sv+='<circle cx="'+(60+880*h[1]/END)+'" cy="'+(150+(h[0]>0?-34:34))+'" r="4" fill="#d5dde0"><title>Heron</title></circle>'});
+sv+='<g data-i="'+N+'" tabindex="0" role="button" aria-label="The Room of Lilies" style="cursor:pointer"><circle cx="940" cy="150" r="34" fill="none" stroke="#e9a8c4" stroke-width="2.5"/><text x="940" y="154" text-anchor="middle" font-size="11" fill="currentColor" font-family="system-ui,sans-serif">Room</text></g><circle id="mkr" cx="60" cy="150" r="7" fill="#e9a8c4"/></svg><p>The walk \u00b7 click a frame to go there \u00b7 Esc closes</p>';
+mv2.innerHTML=sv;var mkr=document.getElementById('mkr');
+function openMap(){Array.prototype.forEach.call(mv2.querySelectorAll('g[data-i]'),function(g){var i=+g.dataset.i,seen=i>=N?Object.keys(SEEN).length===N:SEEN[i];g.querySelector('rect,circle').setAttribute('fill',seen?'rgba(233,168,196,.25)':'none')});mapOn=true;mv2.classList.add('on')}
+function closeMap(){mapOn=false;mv2.classList.remove('on')}
+function pickMap(g){closeMap();setAuto(false);if(tour)setTour(false);go(+g.dataset.i)}
+mv2.addEventListener('click',function(e){var g=e.target.closest&&e.target.closest('[data-i]');if(g)pickMap(g);else closeMap()});
+mv2.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){var g=e.target.closest&&e.target.closest('[data-i]');if(g){e.preventDefault();pickMap(g)}}});
+mapBtn.addEventListener('click',function(){mapOn?closeMap():openMap()});
+addEventListener('keydown',function(e){if(e.key==='Escape'){closeMap();closeWel();gd.classList.remove('on');shv.classList.remove('on');if(tour)setTour(false)}});
+
+// Phone tilt (gyroscope) and palette switcher
+var tb=document.getElementById('tilt');tb.addEventListener('click',function(){function on(){window.__gyro=1;addEventListener('deviceorientation',function(e){if(e.gamma==null)return;tx=Math.max(-.5,Math.min(.5,e.gamma/60));ty=Math.max(-.5,Math.min(.5,((e.beta||45)-45)/90))});tb.textContent='Tilt on'}var D=window.DeviceOrientationEvent;if(D&&typeof D.requestPermission==='function'){D.requestPermission().then(function(r){if(r==='granted')on()}).catch(function(){})}else on()});
+var PALS=[['Rose','#e9a8c4',1,1,1],['Amber','#f0c080',1.25,1,.75],['Indigo','#9ec8f0',.75,.9,1.3]],pn=0,pb=document.getElementById('pal');pb.addEventListener('click',function(){pn=(pn+1)%3;var q=PALS[pn];document.documentElement.style.setProperty('--accent',q[1]);wu.tint.value.set(q[2],q[3],q[4]);pb.textContent='Palette · '+q[0];save()});
+
+// Frogs, birds, golden-lily hunt, time-of-day control, saved progress
+var frogs=[];(function(){var fm=new THREE.MeshLambertMaterial({color:0x6fbf5a}),em=new THREE.MeshLambertMaterial({color:0xfff2a0,emissive:0x4a4010}),cand=pads.filter(function(p){return Math.abs(p.g.position.x)<14});for(var k=0;k<8;k++){var p=cand[(Math.random()*cand.length)|0],g=new THREE.Group(),b=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),fm);b.scale.set(1,.6,1.2);var e1=new THREE.Mesh(new THREE.SphereGeometry(.045,6,6),em);e1.position.set(.07,.1,-.1);var e2=e1.clone();e2.position.x=-.07;g.add(b,e1,e2);g.position.set(p.g.position.x,.14,p.g.position.z);scene.add(g);frogs.push({g:g,a:p.g.position.clone(),b:null,t0:0,next:Math.random()*5})}})();
+var birds=[];for(var k=0;k<9;k++){var bl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-1,.3,0),new THREE.Vector3(0,0,0),new THREE.Vector3(1,.3,0)]),new THREE.LineBasicMaterial({color:0x1d2b33,transparent:true,opacity:0,fog:false}));bl.frustumCulled=false;scene.add(bl);birds.push({l:bl,s:2+Math.random()*2,x:Math.random()*180-90,y:22+Math.random()*25,d:90+Math.random()*70,sp:3+Math.random()*4,ph:Math.random()*6})}
+var gold=[],goldHit=[],GN=7,goldGot=0,toastEl=document.getElementById('toast'),toastT=0;
+function toast(m,ms){toastEl.textContent=m;toastEl.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('on')},ms||3200)}
+(function(){var gm=new THREE.MeshBasicMaterial({color:0xffd24a});for(var k=0;k<GN;k++){var g=new THREE.Group(),b=new THREE.Mesh(new THREE.SphereGeometry(.42,12,10),gm),h=new THREE.Sprite(new THREE.SpriteMaterial({map:lt,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false})),pd=new THREE.Mesh(padGeo,new THREE.MeshBasicMaterial({color:0x2f6a3a,side:THREE.DoubleSide}));h.scale.set(3.5,3.5,1);b.position.y=.5;h.position.y=.5;pd.rotation.x=-Math.PI/2;g.add(pd,b,h);g.position.set((Math.random()<.5?-1:1)*(5+Math.random()*7),.03,-12-k*21-Math.random()*8);scene.add(g);b.userData.i=k;gold.push({g:g,b:b,h:h,got:false,ph:Math.random()*6});goldHit.push(b)}})();
+function collect(i){var G=gold[i];if(G.got)return;G.got=true;goldGot++;G.b.visible=false;G.h.material.opacity=0;ripple(G.g.position);chime();document.getElementById('gold').textContent='✦ '+goldGot+'/'+GN;toast(goldGot===GN?'All seven golden lilies found':'Golden lily found · '+goldGot+' of '+GN);if(goldGot===GN)say('You found all seven golden lilies.');save()}
+var todEl=document.getElementById('tod'),todb=document.getElementById('todauto'),todM=false,todV=0;
+function ph(){return todM?todV:prog}
+todEl.addEventListener('input',function(){todM=true;todV=todEl.value/100;todb.textContent='Time: manual'});
+todb.addEventListener('click',function(){todM=false;todb.textContent='Time: auto'});
+function save(){try{localStorage.setItem('aco-v1',JSON.stringify({seen:Object.keys(SEEN),gold:gold.map(function(G){return G.got?1:0}),pal:pn,rare:rare.got?1:0}))}catch(e){}}
+(function(){try{var d=JSON.parse(localStorage.getItem('aco-v1')||'{}');(d.seen||[]).forEach(function(i){SEEN[i]=1});(d.gold||[]).forEach(function(v,i){if(v&&gold[i]){gold[i].got=true;gold[i].b.visible=false;gold[i].h.material.opacity=0;goldGot++}});document.getElementById('seen').textContent=Object.keys(SEEN).length+'/'+N;document.getElementById('gold').textContent='✦ '+goldGot+'/'+GN;if(d.pal>0&&PALS[d.pal]){pn=d.pal;var q=PALS[pn];document.documentElement.style.setProperty('--accent',q[1]);wu.tint.value.set(q[2],q[3],q[4]);pb.textContent='Palette · '+q[0]}}catch(e){}})();
+setTimeout(function(){toast('Find the seven golden lilies')},4500);
+
+// Guide, fullscreen, rare koi
+var gd=document.getElementById('guide'),guideBtn=document.getElementById('guidebtn'),fsBtn=document.getElementById('fs');
+function guideToggle(){gd.classList.toggle('on');if(gd.classList.contains('on'))gd.scrollTop=0}
+guideBtn.addEventListener('click',guideToggle);document.getElementById('gclose').addEventListener('click',guideToggle);
+if(!document.documentElement.requestFullscreen)fsBtn.hidden=true;
+fsBtn.addEventListener('click',function(){try{var p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();if(p&&p.catch)p.catch(function(){toast('Fullscreen isn’t available here')})}catch(e){toast('Fullscreen isn’t available here')}});
+var rare={got:false,ph:Math.random()*6,g:new THREE.Group()};
+(function(){rare.m=new THREE.Mesh(koi[0].g.children[0].geometry,new THREE.MeshBasicMaterial({color:0xfff6d0,side:THREE.DoubleSide,transparent:true,opacity:.95,depthWrite:false}));rare.m.rotation.x=-Math.PI/2;rare.h=new THREE.Sprite(new THREE.SpriteMaterial({map:wt,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));rare.h.scale.set(4,4,1);rare.h.position.y=.3;rare.g.add(rare.m,rare.h);rare.g.scale.setScalar(1.8);rare.g.position.set(0,.12,-60);scene.add(rare.g)})();
+function catchKoi(){if(rare.got)return;rare.got=true;rare.h.visible=false;rare.m.material.color.set(0xf28a3c);ripple(rare.g.position);chime();toast('You caught the rare koi · it swims on');say('You caught the rare koi.');save()}
+try{var d2=JSON.parse(localStorage.getItem('aco-v1')||'{}');if(d2.rare){rare.got=true;rare.h.visible=false;rare.m.material.color.set(0xf28a3c)}}catch(e){}
+
+
+// Hint, languages, welcome screen, hold-to-walk keys
+var hintBtn=document.getElementById('hint'),gt=document.getElementById('gtext'),gl=document.getElementById('glang'),wl=document.getElementById('wlang'),wel=document.getElementById('welcome'),walkDir=0,wAcc=0;
+function hint(){var cp=cam.position,out=[];if(!rare.got){var dz=rare.g.position.z-cp.z;out.push('The pale koi is '+Math.round(Math.abs(dz))+' m '+(dz<0?'ahead':'behind')+', to your '+(rare.g.position.x>cp.x?'right':'left'));ripple(rare.g.position,true)}var best=null,bd=1e9;gold.forEach(function(G){if(!G.got){var d=Math.abs(G.g.position.z-cp.z);if(d<bd){bd=d;best=G}}});if(best){var dz2=best.g.position.z-cp.z;out.push('Nearest golden lily: '+Math.round(bd)+' m '+(dz2<0?'ahead':'behind')+', to your '+(best.g.position.x>cp.x?'right':'left'))}toast(out.length?out.join(' · '):'You found everything. Wonderful.',5200)}
+// Hint arrow: points at the rare koi or the nearest golden lily
+var arrowEl=document.getElementById('arrow'),arrowSvg=arrowEl.querySelector('svg'),arrowLbl=arrowEl.querySelector('span'),arrowOn=false,arrowT0=0,av=new THREE.Vector3();
+function setArrow(v){arrowOn=v;arrowT0=performance.now()/1000;if(!v)arrowEl.classList.remove('on')}
+function arrowTarget(){var cp=cam.position,best=null,bd=1e9;if(!rare.got){best=rare.g.position;bd=best.distanceTo(cp)}gold.forEach(function(G){if(!G.got){var d=G.g.position.distanceTo(cp);if(d<bd){bd=d;best=G.g.position}}});return best}
+function updateArrow(n){if(!arrowOn)return;var tg=arrowTarget();if(!tg||n-arrowT0>14){setArrow(false);return}if(lb.classList.contains('on')||gd.classList.contains('on')||wel.classList.contains('on')||mv2.classList.contains('on')){arrowEl.classList.remove('on');return}
+ cam.updateMatrixWorld();av.copy(tg);av.y+=.6;var behind=av.clone().applyMatrix4(cam.matrixWorldInverse).z>0;av.project(cam);var sx=av.x,sy=av.y;if(behind){sx=-sx;sy=-sy}
+ var on=!behind&&Math.abs(sx)<.88&&Math.abs(sy)<.8,px=sx,py=sy,rot=90;if(!on){var k=.86/Math.max(Math.abs(sx),Math.abs(sy),.001);px=sx*k;py=sy*k;rot=Math.atan2(-sy,sx)*180/Math.PI}
+ arrowEl.style.transform='translate('+((px*.5+.5)*innerWidth)+'px,'+((-py*.5+.5)*innerHeight-(on?46:0))+'px)';arrowSvg.style.transform='rotate('+rot+'deg)';arrowLbl.textContent=Math.round(tg.distanceTo(cam.position))+' m';arrowEl.classList.add('on')}
+hintBtn.addEventListener('click',function(){if(arrowOn){setArrow(false);return}hint();setArrow(true)});
+document.addEventListener('visibilitychange',function(){if(!AC)return;try{if(document.hidden)AC.suspend();else if(snd)AC.resume()}catch(e){}});
+renderer.domElement.addEventListener('webglcontextlost',function(e){e.preventDefault();toast('Graphics paused. Reload the page to continue.',8000)});
+addEventListener('keydown',function(e){if(e.ctrlKey||e.metaKey||e.altKey||gd.classList.contains('on')||wel.classList.contains('on')||mv2.classList.contains('on')||lb.classList.contains('on')||(e.target&&e.target.tagName==='INPUT'&&e.target.type==='range'))return;var k=e.key;if(k==='ArrowDown'||k==='w'||k==='W')walkDir=1;else if(k==='ArrowUp'||k==='s'||k==='S')walkDir=-1;else return;e.preventDefault();setAuto(false);if(tour)setTour(false)});
+addEventListener('keyup',function(e){if(['ArrowDown','ArrowUp','s','S','w','W'].indexOf(e.key)>-1)walkDir=0});addEventListener('blur',function(){walkDir=0});
+var GUIDE={en:gt.innerHTML,
+es:`<h2>Cómo funciona</h2><p class="lead">Un paseo tranquilo por un estanque, dibujado en directo por código. Desplázate para avanzar; todo lo demás es opcional.</p><h3>Lo que ves</h3><ul><li><b>El estanque.</b> Una escena 3D (three.js). Al desplazarte, la cámara avanza por un camino, así que caminas al ritmo que tú marques.</li><li><b>Las pinturas.</b> Once estudios originales, hechos con miles de pinceladas aleatorias generadas por código. Ninguno copia una obra real. Cada uno tiene una breve historia al abrirlo.</li><li><b>El cielo.</b> Un ciclo de día y noche repartido a lo largo del paseo, así que la luz cambia al avanzar. El control Time te deja fijarla tú.</li><li><b>La vida.</b> Los lirios se abren cuando te acercas, las ranas saltan entre hojas, nadan carpas koi, de día cruzan pájaros y de noche aparecen estrellas y una luna.</li></ul><h3>Controles</h3><div class="kv"><span>Desplazar · mantener ↑ ↓ o W S</span><span>Caminar</span><span>← →</span><span>Ir a la pintura anterior o siguiente</span><span>Clic en una pintura</span><span>Verla en grande; otro clic para cerrar</span><span>Clic en el agua</span><span>Ondas. Doble clic deja un farolillo</span><span>A · T</span><span>Paseo automático · visita guiada</span><span>G</span><span>Mapa del paseo</span><span>N · M</span><span>Narración · sonido ambiente</span><span>R</span><span>Lluvia</span><span>P</span><span>Foto (luego clic derecho o mantén pulsado para guardar)</span><span>C</span><span>Modo calma, con menos movimiento</span><span>F · H · K · Esc</span><span>Pantalla completa · esta guía · pista · cerrar todo</span></div><h3>Cosas por encontrar</h3><p>Siete lirios dorados ✦ están escondidos en el camino, y una carpa koi pálida y rara nada por todo el estanque. Haz clic en ellos. Tu progreso se guarda solo en este navegador. ¿Atascado? Menu → Hint (o pulsa K) te dice más o menos dónde mirar.</p><h3>Conviene saber</h3><ul><li>El sonido empieza apagado. Actívalo con el botón de abajo a la derecha; el acorde cambia de tono en cada pintura.</li><li>«Add your art» (o soltar imágenes en la página) cuelga tus imágenes en los marcos. Se quedan en tu dispositivo y se reinician al recargar.</li><li>Si va lento, prueba el modo calma. En el móvil, Tilt te deja mirar moviendo el dispositivo.</li><li>Menu guarda los demás botones. Copy link comparte tu punto del paseo.</li></ul>`,
+fr:`<h2>Comment ça marche</h2><p class="lead">Une promenade tranquille au-dessus d’un étang, dessinée en direct par du code. Faites défiler pour avancer ; tout le reste est facultatif.</p><h3>Ce que vous voyez</h3><ul><li><b>L’étang.</b> Une scène 3D (three.js). Le défilement fait avancer la caméra le long d’un chemin : vous marchez à votre rythme.</li><li><b>Les tableaux.</b> Onze études originales, composées de milliers de coups de pinceau aléatoires générés par le code. Aucune ne copie une œuvre existante. Chacune a une courte histoire quand on l’ouvre.</li><li><b>Le ciel.</b> Un cycle jour-nuit réparti sur la promenade : la lumière change au fil du chemin. Le curseur Time permet de la fixer soi-même.</li><li><b>La vie.</b> Les nénuphars s’ouvrent à votre approche, les grenouilles sautent de feuille en feuille, des carpes koï nagent, des oiseaux passent le jour, et la nuit apparaissent étoiles et lune.</li></ul><h3>Commandes</h3><div class="kv"><span>Défilement · maintenir ↑ ↓ ou W S</span><span>Marcher</span><span>← →</span><span>Tableau précédent ou suivant</span><span>Clic sur un tableau</span><span>L’agrandir ; un autre clic pour fermer</span><span>Clic sur l’eau</span><span>Ondulations. Un double-clic dépose une lanterne</span><span>A · T</span><span>Lecture automatique · visite guidée</span><span>G</span><span>Carte de la promenade</span><span>N · M</span><span>Narration · ambiance sonore</span><span>R</span><span>Pluie</span><span>P</span><span>Photo (puis clic droit ou appui long pour l’enregistrer)</span><span>C</span><span>Mode calme, avec moins de mouvement</span><span>F · H · K · Échap</span><span>Plein écran · ce guide · indice · tout fermer</span></div><h3>À trouver</h3><p>Sept nénuphars dorés ✦ sont cachés le long du chemin, et une carpe koï pâle et rare nage d’un bout à l’autre de l’étang. Cliquez dessus. Votre progression n’est enregistrée que dans ce navigateur. Bloqué ? Menu → Hint (ou la touche K) indique grosso modo où chercher.</p><h3>Bon à savoir</h3><ul><li>Le son est coupé au départ. Activez-le avec le bouton en bas à droite ; l’accord change de tonalité à chaque tableau.</li><li>«Add your art» (ou déposer des images sur la page) accroche vos propres images dans les cadres. Elles restent sur votre appareil et disparaissent au rechargement.</li><li>Si c’est lent, essayez le mode calme. Sur téléphone, Tilt permet de regarder autour en bougeant l’appareil.</li><li>Menu contient les autres boutons. Copy link partage votre position dans la promenade.</li></ul>`,
+ur:`<h2>یہ کیسے کام کرتا ہے</h2><p class="lead">ایک پرسکون تالاب کی سیر، جو کوڈ کے ذریعے لمحہ بہ لمحہ بنائی جاتی ہے۔ آگے بڑھنے کے لیے اسکرول کریں؛ باقی سب کچھ اختیاری ہے۔</p><h3>آپ کیا دیکھ رہے ہیں</h3><ul><li><b>تالاب۔</b> ایک تھری ڈی منظر (three.js)۔ اسکرول کرنے سے کیمرا ایک راستے پر آگے بڑھتا ہے، یعنی آپ اپنی رفتار سے چلتے ہیں۔</li><li><b>پینٹنگز۔</b> گیارہ اصل مطالعے، جو کوڈ سے بنے ہزاروں بے ترتیب برش اسٹروکس سے تیار ہوتے ہیں۔ ان میں سے کوئی بھی کسی حقیقی فن پارے کی نقل نہیں۔ کھولنے پر ہر ایک کی مختصر کہانی ملتی ہے۔</li><li><b>آسمان۔</b> دن اور رات کا ایک چکر پوری سیر پر پھیلا ہوا ہے، اس لیے آگے بڑھتے ہوئے روشنی بدلتی ہے۔ Time سلائڈر سے آپ اسے خود مقرر کر سکتے ہیں۔</li><li><b>زندگی۔</b> قریب جانے پر کنول کھلتے ہیں، مینڈک پتوں پر کودتے ہیں، جاپانی کوئی مچھلیاں تیرتی ہیں، دن میں پرندے گزرتے ہیں اور رات کو ستارے اور چاند نکلتے ہیں۔</li></ul><h3>کنٹرولز</h3><div class="kv"><span>اسکرول · ↑ ↓ یا W S دبائے رکھیں</span><span>چلیں</span><span>← →</span><span>پچھلی یا اگلی پینٹنگ پر جائیں</span><span>پینٹنگ پر کلک</span><span>بڑی دیکھیں؛ بند کرنے کے لیے دوبارہ کلک</span><span>پانی پر کلک</span><span>لہریں۔ ڈبل کلک سے لالٹین رکھی جاتی ہے</span><span>A · T</span><span>خودکار سیر · رہنمائی والا دورہ</span><span>G</span><span>سیر کا نقشہ</span><span>N · M</span><span>بیانیہ · ماحولیاتی آواز</span><span>R</span><span>بارش</span><span>P</span><span>تصویر (محفوظ کرنے کے لیے رائٹ کلک یا دیر تک دبائیں)</span><span>C</span><span>پرسکون موڈ، کم حرکت کے ساتھ</span><span>F · H · K · Esc</span><span>فل اسکرین · یہ گائیڈ · اشارہ · سب کچھ بند کریں</span></div><h3>ڈھونڈنے کی چیزیں</h3><p>راستے میں سات سنہری کنول ✦ چھپے ہیں، اور ایک نایاب ہلکے رنگ کی مچھلی پورے تالاب میں تیرتی ہے۔ ان پر کلک کریں۔ آپ کی پیش رفت صرف اسی براؤزر میں محفوظ ہوتی ہے۔ اٹک گئے؟ Menu → Hint (یا K دبائیں) موٹے طور پر بتاتا ہے کہاں دیکھنا ہے۔</p><h3>جاننے کی باتیں</h3><ul><li>آواز شروع میں بند ہوتی ہے۔ نیچے دائیں بٹن سے آن کریں؛ ہر پینٹنگ پر سُر بدلتا ہے۔</li><li>«Add your art» (یا صفحے پر تصویریں چھوڑنے) سے آپ کی تصویریں فریموں میں لگ جاتی ہیں۔ وہ آپ کے آلے پر رہتی ہیں اور دوبارہ لوڈ کرنے پر ختم ہو جاتی ہیں۔</li><li>اگر سست لگے تو پرسکون موڈ آزمائیں۔ فون پر Tilt سے آلہ ہلا کر ارد گرد دیکھا جا سکتا ہے۔</li><li>Menu میں باقی بٹن ہیں۔ Copy link سے سیر میں آپ کا مقام شیئر ہوتا ہے۔</li></ul>`};
+var WEL={en:{h:'Welcome',p:['Scroll to walk across the water.','Click paintings, water, golden lilies and koi.','Press H any time for the guide.'],b:['Begin','Begin with sound','Read the guide']},es:{h:'Bienvenido',p:['Desplázate para caminar sobre el agua.','Haz clic en las pinturas, el agua, los lirios dorados y las carpas.','Pulsa H cuando quieras para ver la guía.'],b:['Empezar','Empezar con sonido','Leer la guía']},fr:{h:'Bienvenue',p:['Faites défiler pour marcher sur l’eau.','Cliquez sur les tableaux, l’eau, les nénuphars dorés et les carpes.','Appuyez sur H à tout moment pour le guide.'],b:['Commencer','Commencer avec le son','Lire le guide']},ur:{h:'خوش آمدید',p:['پانی پر چلنے کے لیے اسکرول کریں۔','پینٹنگز، پانی، سنہری کنول اور مچھلیوں پر کلک کریں۔','گائیڈ کے لیے کسی بھی وقت H دبائیں۔'],b:['شروع کریں','آواز کے ساتھ شروع کریں','گائیڈ پڑھیں']}};
+function setLang(l,keep){if(!GUIDE[l])l='en';gt.innerHTML=GUIDE[l];gt.lang=l;gt.dir=wel.dir=l==='ur'?'rtl':'ltr';gl.value=wl.value=l;var W=WEL[l],ps=wel.querySelectorAll('p');wel.querySelector('h2').textContent=W.h;for(var i=0;i<3;i++)ps[i].textContent=W.p[i];document.getElementById('wgo').textContent=W.b[0];document.getElementById('wsnd').textContent=W.b[1];document.getElementById('wgd').textContent=W.b[2];if(!keep)try{localStorage.setItem('aco-lang',l)}catch(e){}}
+gl.addEventListener('change',function(){setLang(gl.value)});wl.addEventListener('change',function(){setLang(wl.value)});
+function closeWel(){if(!wel.classList.contains('on'))return;wel.classList.remove('on');try{localStorage.setItem('aco-seen','1')}catch(e){}}
+document.getElementById('wgo').addEventListener('click',closeWel);
+document.getElementById('wsnd').addEventListener('click',function(){closeWel();sb.click()});
+document.getElementById('wgd').addEventListener('click',function(){closeWel();guideToggle()});
+var first=true,sl='';try{first=!localStorage.getItem('aco-seen');sl=localStorage.getItem('aco-lang')||''}catch(e){}
+setLang(sl||(navigator.language||'en').slice(0,2),!sl);
+if(first)setTimeout(function(){wel.classList.add('on');document.getElementById('wgo').focus()},1800);
+
+var $=function(s){return document.querySelector(s)},cap=$('#cap'),cur=-2,intro=$('#intro'),bar=$('#bar i'),endEl=$('#end'),yr=$('#year');
+function setCap(idx){
+  if(idx===cur)return;cur=idx;Array.prototype.forEach.call(document.querySelectorAll('#dots button'),function(b,k){b.classList.toggle('on',k===idx)});tune(idx);narr(idx);if(idx>=0){try{history.replaceState(null,'','#'+(idx>=N?'room':'study-'+(idx+1)))}catch(e){}}if(idx>=0&&idx<N){SEEN[idx]=1;save();var sc=Object.keys(SEEN).length;document.getElementById('seen').textContent=sc+'/'+N;if(sc===N)document.querySelector('#end p').textContent='You passed all eleven studies. The water doesn’t hurry.'}cap.classList.add('out');
+  setTimeout(function(){if(idx<0||cur!==idx)return;var c=CAPS[idx];cap.querySelector('small').textContent='Study '+c[0];cap.querySelector('h2').textContent=c[1];cap.querySelector('p').textContent=c[2];cap.classList.remove('out')},420);
+}
+var clock=new THREE.Clock();
+function loop(){
+  requestAnimationFrame(loop);var t=clock.getElapsedTime();
+  prog+=(target-prog)*(reduce?1:.06);mx+=(tx-mx)*.05;my+=(ty-my)*.05;
+  var cz=-prog*LEN,sway=reduce?0:Math.sin(prog*14)*.7;
+  cam.position.set(sway+mx*1.2,1.7+Math.sin(t*1.2)*(reduce?0:.04)-my*.4,cz);
+  cam.lookAt(sway*.5+mx*5,1.9-my*2.2,cz-12);
+  water.position.z=cz;wu.t.value=t;sky.position.copy(cam.position);su.p.value=wu.p.value=ph();su.t.value=t;stepFx(t);
+  if(!reduce){
+    frames.forEach(function(f){f.g.position.y=f.y+Math.sin(t*.8+f.ph)*.14});
+    pads.forEach(function(p){p.g.position.y=.02+Math.sin(t*1.1+p.ph)*.03;p.g.rotation.y=Math.sin(t*.3+p.ph)*.08});
+    pts.rotation.y=Math.sin(t*.1)*.05;pts.position.y=Math.sin(t*.5)*.3;
+  }
+  var near=Math.round(-cz/GAP)-1;setCap(near<-1?-1:Math.min(near,N));if(prog<.02&&cur>=0)setCap(-1);
+  intro.style.opacity=Math.max(0,1-prog*14);intro.style.transform='translateY('+(-prog*600)+'px) scale('+(1+prog*3)+')';
+  bar.style.width=(prog*100)+'%';yr.textContent=Math.round(1926+prog*100);
+  endEl.style.opacity=Math.max(0,Math.min(1,(prog-.9)*10));
+  cam.fov=60+Math.abs(target-prog)*160;cam.updateProjectionMatrix();
+  renderer.render(scene,cam);if(shot){shot=false;snap()}
+  fpsN++;var nowT=performance.now();if(nowT-fpsT>2000){var fps=fpsN*1000/(nowT-fpsT);fpsN=0;fpsT=nowT;if(fps<36&&PR>.8){PR=Math.max(.8,PR*.8);renderer.setPixelRatio(PR);renderer.setSize(innerWidth,innerHeight)}}
+}
+loop();
+setTimeout(readHash,200);setTimeout(function(){document.getElementById('loader').classList.add('gone')},1200);
+})();
+</script>
+</body>
+</html>
